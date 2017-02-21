@@ -1,6 +1,8 @@
 module Advent1
-    ( advent1_1, advent1_2
+    ( advent1_1, advent1_2, input, start, parsedInstructions, travel, step, walk, walkWithSteps, travelWithPos, travelWithPos1, Rotation, Position, State, Direction, Instruction
     ) where
+
+import Control.Monad.Writer
 
 data Rotation = North | South | East | West deriving (Show, Eq)
 data Position = Pos Int Int deriving (Show, Eq)
@@ -18,17 +20,31 @@ rotate South R = West
 rotate West L = South
 rotate West R = North
 
+step :: State -> State
+step (State (Pos x y) North) = (State (Pos x     (y+1)) North)
+step (State (Pos x y) East)  = (State (Pos (x+1) y)   East)
+step (State (Pos x y) South) = (State (Pos x     (y-1)) South)
+step (State (Pos x y) West)  = (State (Pos (x-1) y)   West)
+
+position :: State -> Position
+position (State p r) = p
+
+walkWithSteps :: State -> Int -> [State]
+walkWithSteps state blocks = take blocks $ iterate (step) state
+
 walk :: State -> Int -> State
-walk (State (Pos x y) North) blocks = State (Pos x          (y+blocks)) North
-walk (State (Pos x y) East)  blocks = State (Pos (x+blocks) y)          East
-walk (State (Pos x y) South) blocks = State (Pos x          (y-blocks)) South
-walk (State (Pos x y) West)  blocks = State (Pos (x-blocks) y)          West
+walk state blocks = last $ walkWithSteps state blocks
 
 blocksAwayFromEasterBunnyHQ :: State -> Int
 blocksAwayFromEasterBunnyHQ (State (Pos x y) _) = (abs x) + (abs y)
 
 travel :: State -> Instruction -> State
 travel (State pos r) (I d n) = walk (State pos (rotate r d)) n
+
+travelWithPos :: State -> Instruction -> Writer [Position] State
+travelWithPos state@(State p r) instruction@(I dir blocks) = writer (travel state instruction, map (position) $ walkWithSteps state blocks)
+
+travelWithPos1 = travelWithPos start (I R 5)
 
 -- Parsing arguments
 
@@ -46,10 +62,12 @@ toInstruction (x:xs) = I (read [x]) (read xs)
 
 -- Answers
 
+input = "R5, R4, R2, L3, R1, R1, L4, L5, R3, L1, L1, R4, L2, R1, R4, R4, L2, L2, R4, L4, R1, R3, L3, L1, L2, R1, R5, L5, L1, L1, R3, R5, L1, R4, L5, R5, R1, L185, R4, L1, R51, R3, L2, R78, R1, L4, R188, R1, L5, R5, R2, R3, L5, R3, R4, L1, R2, R2, L4, L4, L5, R5, R4, L4, R2, L5, R2, L1, L4, R4, L4, R2, L3, L4, R2, L3, R3, R2, L2, L3, R4, R3, R1, L4, L2, L5, R4, R4, L1, R1, L5, L1, R3, R1, L2, R1, R1, R3, L4, L1, L3, R2, R4, R2, L2, R1, L5, R3, L3, R3, L1, R4, L3, L3, R4, L2, L1, L3, R2, R3, L2, L1, R4, L3, L5, L2, L4, R1, L4, L4, R3, R5, L4, L1, L1, R4, L2, R5, R1, R1, R2, R1, R5, L1, L3, L5, R2"
+start = State (Pos 0 0) North
+
+parsedInstructions = map (toInstruction.trim) $ separate ',' input
+
 advent1_1 = do
-    let lst = "R5, R4, R2, L3, R1, R1, L4, L5, R3, L1, L1, R4, L2, R1, R4, R4, L2, L2, R4, L4, R1, R3, L3, L1, L2, R1, R5, L5, L1, L1, R3, R5, L1, R4, L5, R5, R1, L185, R4, L1, R51, R3, L2, R78, R1, L4, R188, R1, L5, R5, R2, R3, L5, R3, R4, L1, R2, R2, L4, L4, L5, R5, R4, L4, R2, L5, R2, L1, L4, R4, L4, R2, L3, L4, R2, L3, R3, R2, L2, L3, R4, R3, R1, L4, L2, L5, R4, R4, L1, R1, L5, L1, R3, R1, L2, R1, R1, R3, L4, L1, L3, R2, R4, R2, L2, R1, L5, R3, L3, R3, L1, R4, L3, L3, R4, L2, L1, L3, R2, R3, L2, L1, R4, L3, L5, L2, L4, R1, L4, L4, R3, R5, L4, L1, L1, R4, L2, R5, R1, R1, R2, R1, R5, L1, L3, L5, R2"
-    let start = (State (Pos 0 0) North)
-    let instructions = map (toInstruction.trim) $ separate ',' lst
-    blocksAwayFromEasterBunnyHQ $ foldl travel start instructions
+    blocksAwayFromEasterBunnyHQ $ foldl travel start parsedInstructions
 
 advent1_2 = ""

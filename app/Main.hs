@@ -2,6 +2,7 @@ module Main where
 
 import Lib
 import System.Environment
+import Control.Monad.Writer
 
 execArgs :: [String] -> String
 execArgs [] = "You must specify at least one argument: <executable> <parameter>"
