@@ -1,5 +1,5 @@
 module Advent1
-    ( advent1_1, advent1_2, input, start, parsedInstructions, travel, step, walk, walkWithSteps, travelWithPos, travelWithPos1, Rotation, Position, State, Direction, Instruction
+    ( advent1_1, advent1_2
     ) where
 
 import Control.Monad.Writer
@@ -35,16 +35,23 @@ walkWithSteps state blocks = take blocks $ iterate (step) state
 walk :: State -> Int -> State
 walk state blocks = last $ walkWithSteps state blocks
 
-blocksAwayFromEasterBunnyHQ :: State -> Int
-blocksAwayFromEasterBunnyHQ (State (Pos x y) _) = (abs x) + (abs y)
+blocksAwayFromEasterBunnyHQ :: Position -> Int
+blocksAwayFromEasterBunnyHQ (Pos x y) = (abs x) + (abs y)
 
 travel :: State -> Instruction -> State
 travel (State pos r) (I d n) = walk (State pos (rotate r d)) n
 
-travelWithPos :: State -> Instruction -> Writer [Position] State
-travelWithPos state@(State p r) instruction@(I dir blocks) = writer (travel state instruction, map (position) $ walkWithSteps state blocks)
+travelWithSteps :: State -> Instruction -> [State]
+travelWithSteps (State pos r) (I d n) = walkWithSteps (State pos (rotate r d)) n
 
-travelWithPos1 = travelWithPos start (I R 5)
+logTrip :: State -> Instruction -> Writer [Position] State
+logTrip state instruction@(I _ n) = writer (travel state instruction, init $ map (position) $ travelWithSteps state instruction)
+
+allTheSteps :: State -> [Instruction] -> Writer [Position] State
+allTheSteps state instructions = do
+    finalState <- foldM (logTrip) state instructions 
+    tell $ [position finalState]
+    return finalState
 
 -- Parsing arguments
 
@@ -67,7 +74,11 @@ start = State (Pos 0 0) North
 
 parsedInstructions = map (toInstruction.trim) $ separate ',' input
 
-advent1_1 = do
-    blocksAwayFromEasterBunnyHQ $ foldl travel start parsedInstructions
+advent1_1 = 
+    blocksAwayFromEasterBunnyHQ $ position $ foldl travel start parsedInstructions
 
-advent1_2 = ""
+advent1_2 = blocksAwayFromEasterBunnyHQ $ position $ firstIntersection $ runWriter $ allTheSteps start parsedInstructions
+    where firstIntersection (_,l) = firstIntersection' l []
+          firstIntersection' (x:xs) l
+              | elem x l = x
+              | otherwise = firstIntersection' xs (x:l)

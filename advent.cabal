@@ -27,6 +27,7 @@ executable advent-exe
   build-depends:       base
                      , advent
                      , mtl
+                     , containers
   default-language:    Haskell2010
 
 test-suite ciro-test
