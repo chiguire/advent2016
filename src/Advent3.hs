@@ -2,6 +2,9 @@ module Advent3
     ( advent3_1, advent3_2, Triangle, possible
     ) where
 
+import Data.List
+import Data.List.Split
+
 data Triangle = Triangle Int Int Int
 
 possible :: Triangle -> Bool
@@ -9,8 +12,7 @@ possible (Triangle a b c) =
     (a + b > c) && (b + c > a) && (a + c > b)
 
 toVertical :: [Triangle] -> [Triangle]
-toVertical [] = []
-toVertical l = toVertical' (take 3 l) ++ toVertical (drop 3 l)
+toVertical l = concatMap (toVertical') $ chunksOf 3 l
     where toVertical' [(Triangle a b c), (Triangle e d f), (Triangle g h i)] = [(Triangle a e g), (Triangle b d h), (Triangle c f i)]
 
 -- Answers

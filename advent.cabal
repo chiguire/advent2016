@@ -15,9 +15,10 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Lib, Advent1, Advent2, Advent3
+  exposed-modules:     Lib, Advent1, Advent2, Advent3, Advent4
   build-depends:       base >= 4.7 && < 5
                      , mtl
+                     , split
   default-language:    Haskell2010
 
 executable advent-exe
